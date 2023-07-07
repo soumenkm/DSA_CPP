@@ -9,8 +9,8 @@ using std::cin;
 
 class StackByArray {
     private:
-        const int max;
-        int* const array; // Dynamically allocated
+        int max;
+        int* array; // Dynamically allocated
         int top{-1};
     
     public:
@@ -21,10 +21,19 @@ class StackByArray {
         StackByArray():
             max{10},
             array{new int[max]()} {} // Initializes all element as 0
+        StackByArray(StackByArray* other) {
+            this->max = other->max;
+            this->top = other->top;
+            this->array = new int[this->max]();
+            for (int i = 0; i < this->max; i++) {
+                this->array[i] = other->array[i];
+            }
+        }
 
         // Destructor
         ~StackByArray() {
             delete[] array; // For statically allocated Stack object, it is auto deleted
+            cout << "Stack is deleted!" << endl;
         }
 
         // Checking state of stack
@@ -54,7 +63,7 @@ class StackByArray {
             } else {
                 (this->top)++;
                 this->array[this->top] = elem;
-                cout << "Pushed " << elem << " onto stack" << endl;
+                // cout << "Pushed " << elem << " onto stack" << endl;
             }
         }
         int pop() {
@@ -65,7 +74,7 @@ class StackByArray {
                 int poppedElem = this->array[this->top];
                 this->array[this->top] = 0;
                 (this->top)--;
-                cout << "Popped " << poppedElem << " from stack" << endl;
+                // cout << "Popped " << poppedElem << " from stack" << endl;
                 return poppedElem;
             }
         }

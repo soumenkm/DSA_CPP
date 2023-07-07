@@ -1,3 +1,6 @@
+#ifndef STACKBYLL_H
+#define STACKBYLL_H
+
 #include <iostream>
 
 using std::cout;
@@ -26,7 +29,6 @@ public:
             current = current->next;
             delete temp;
         }
-        cout << "LL is deleted" << endl;
     }
 
     // Insert at front
@@ -76,11 +78,13 @@ public:
     // Destructor
     ~StackByLL() {
         this->top->deleteLL();
+        cout << "Stack is deleted!" << endl;
     }
 
     // Operations on Stack
     void push(const int elem) {
         this->top = this->top->insertAtFront(elem);
+        cout << "Pushed " << elem << " onto stack" << endl;
     }
     int pop() {
         if (this->top == nullptr) {
@@ -89,6 +93,7 @@ public:
         } else {
             int popElem = 0;
             Node* newHead = this->top->deleteAtFront(popElem);
+            cout << "Popped " << popElem << " from stack" << endl;
             this->top = newHead;
             return popElem;
         }
@@ -101,21 +106,11 @@ public:
     }
     void printStack() const {
         if (this->isEmpty()) {
-            cout << "Stack is Empty" << endl;
+            cout << "Stack is Empty!" << endl;
         } else {
             this->top->printLL();
         }
     }
 };
 
-int main() {
-    StackByLL* s = new StackByLL();
-    s->push(10);
-    s->push(20);
-    s->push(30);
-    s->push(40);
-    s->pop();
-    s->peek();
-    s->printStack();
-    return 0;    
-}
+#endif
