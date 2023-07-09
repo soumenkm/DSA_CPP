@@ -80,10 +80,10 @@ class StackByArray {
         }
         int peek() {
             if (this->isEmpty()) {
-                cout << "Stack Underflow!" << endl;
+                // cout << "Stack Underflow!" << endl;
                 return -1;
             } else {
-                cout << "Top element of stack: " << this->array[this->top] << endl;
+                // cout << "Top element of stack: " << this->array[this->top] << endl;
                 return this->array[this->top];
             }
         }
