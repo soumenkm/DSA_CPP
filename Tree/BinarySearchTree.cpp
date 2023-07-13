@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stack>
+#include <map>
 
 using std::cout;
 using std::endl;
@@ -298,67 +300,173 @@ public:
         else throw runtime_error("Invalid type!");
     }
 
-    BSTNode* getParentNode(int elem) {
-        // to be implemented
+    std::map<BSTNode*, BSTNode*>* getParentMap() {
+        BSTNode* root = this;
+        static std::stack<BSTNode*> nodeStack {};
+        if (root == nullptr) {
+            // if root is null then we don't do anything as null parent doesn't make sense
+            std::map<BSTNode*, BSTNode*>* res = new std::map<BSTNode*, BSTNode*> {};
+            return res;
+        } else if (root->left == nullptr && root->right == nullptr) {
+            // if root is leaf then we peek at the stack top and it will be the parent
+            std::map<BSTNode*, BSTNode*>* res = new std::map<BSTNode*, BSTNode*>
+                                                {std::make_pair(root, nodeStack.top())};
+            return res;
+        } else {
+            // Divide - first push the root to remember it later
+            nodeStack.push(root);
+
+            // Conquer - get the parent for lst and rst recursively
+            std::map<BSTNode*, BSTNode*>* res1 = root->left->getParentMap();
+            std::map<BSTNode*, BSTNode*>* res2 = root->right->getParentMap();
+            
+            // Combine - get the parent for root
+            // merge the 2 maps
+            res1->insert(res2->begin(),res2->end());
+            
+            // pop the top root node because at the time of division, it was pushed
+            nodeStack.pop();
+
+            // if the top is empty then nullptr will be parent of root else the current top
+            // will be the parent of root
+            if (nodeStack.empty()) {
+                res1->insert(std::make_pair(root,nullptr));
+            } else {
+                BSTNode* p = nodeStack.top();
+                res1->insert(std::make_pair(root,p));
+            }
+
+            // delete the individual maps and store the merged map only
+            std::map<BSTNode*, BSTNode*>* res = new std::map<BSTNode*, BSTNode*> {*res1};
+            delete res1;
+            delete res2;
+
+            return res;
+        }
     }
 
-    BSTNode* deleteNode(const int elem, BSTNode* const parent = nullptr) {
-        static int numCall {0};
-        numCall++;
+    BSTNode* deleteNode(const int elem) {
+        // Get the parents map and parent of current root
         BSTNode* root = this;
+        static int c {0};
+        c++;
+        static BSTNode* retVal {nullptr};
+        if (c == 1) {
+            retVal = root;
+        } 
+        static std::map<BSTNode*, BSTNode*>* parentMap {root->getParentMap()};
+        BSTNode* parent = (*parentMap)[root]; // parent for the current root
+
         if (root == nullptr) {
+            // if the root is nullptr then do nothing and return the nullptr
             return nullptr;
         } else if (root->left == nullptr && root->right == nullptr && root->data == elem) {
-            // The leaf node is deleted
+            // if the root is leaf node then leaf node is deleted directly and return the
+            // parent node of it
             BSTNode* temp = root;
             delete temp;
-            if (elem <= parent->data) {
-                parent->left = nullptr;
+            if (parent != nullptr) {
+                // if parent is not null then we set the 2 pointers of parent
+                //  to null after deleting the leaf node and finally return original root node
+                if (elem <= parent->data) {
+                    parent->left = nullptr;
+                } else {
+                    parent->right = nullptr;
+                }
+                return retVal;
             } else {
-                parent->right = nullptr;
+                // if parent is null then the tree becomes empty so return null
+                return nullptr;
             }
             
         } else if (root->left == nullptr && root->data == elem) {
-            // Only the right child exists
+            // Only the right child exists and this node to be deleted
             if (parent == nullptr) {
+                // if the parent is null then we delete root and return its right child
                 BSTNode* temp = root->right;
                 delete root;
                 return temp;
-            }
-            if (elem <= parent->data) {
-                parent->left = root->right;
             } else {
-                parent->right = root->right;
+                // if the parent is not null then connect parent to right child of root
+                if (elem <= parent->data) {
+                    // if the parent to root is left connected then we set the left 
+                    // pointer of parent to root right child
+                    parent->left = root->right;
+                } else {
+                    // if the parent to root is right connected then we set the right
+                    // pointer of parent to root right child
+                    parent->right = root->right;
+                }
+                // delete the root and return the original root
+                delete root;
+                return retVal;
             }
-            delete root;
+
         } else if (root->right == nullptr && root->data == elem) {
-            // Only the left child exists
+            // Only the left child exists and this node to be deleted
             if (parent == nullptr) {
+                // if the parent is null then we delete root and return its left child
                 BSTNode* temp = root->left;
                 delete root;
                 return temp;
-            }
-            if (elem <= parent->data) {
-                parent->left = root->left;
             } else {
-                parent->right = root->left;
+                // if the parent is not null then connect parent to left child of root
+                if (elem <= parent->data) {
+                    // if the parent to root is left connected then we set the left 
+                    // pointer of parent to root left child
+                    parent->left = root->left;
+                } else {
+                    // if the parent to root is right connected then we set the right
+                    // pointer of parent to root left child
+                    parent->right = root->left;
+                }
+                // delete the root and return the original root
+                delete root;
+                return retVal;
             }
-            delete root;
+
         } else if (root->data == elem) {
-            // Both the child exists
+            // Both the child exists and this node to be deleted
+            // first obtain the predecessor
             BSTNode* pred = root->left->search(root->left->getExtreme("max"));
+
+            // record the pred data that will be later replace to root
             int temp = pred->data;
-            pred->data = root->data;
+            
+            // delete the pred node with pred data in it
+            BSTNode* res = pred->deleteNode(pred->data); // send the pred data now, not elem
+            
+            // replace the root with the pred data
             root->data = temp;
-            pred->deleteNode(elem, root); // bug - parent
+            
+            if (parent == nullptr) {
+                return res; // return res if parent is null and new root will be res
+            } else {
+                return retVal; // if res is not null then original root will not change
+            }
+
         } else if (elem <= root->data) {
-            root->left->deleteNode(elem, root);
+            // check if the elem to be deleted is present in left subtree then 
+            // recursively delete the node from left subtree
+            BSTNode* res = root->left->deleteNode(elem);
+            if (parent == nullptr) {
+                return res; // return res if parent is null and new root will be res
+            } else {
+                return retVal; // if res is not null then original root will not change
+            }
         } else if (elem > root->data) {
-            root->right->deleteNode(elem, root);
+            // check if the elem to be deleted is present in right subtree then 
+            // recursively delete the node from right subtree
+            BSTNode* res = root->right->deleteNode(elem);
+            if (parent == nullptr) {
+                return res;
+            } else {
+                return retVal;
+            }
         } else {
+            // if the control enters here then some corner cases are not considered
             throw runtime_error("Something went wrong!");
         }
-        return root;
     } 
 
 };
@@ -371,11 +479,16 @@ int main() {
     root->print("in");
     root->print("pre");
 
-    // root = root->deleteNode(6);
-    // root->print("in");
+    // std::map<BSTNode*, BSTNode*>* parentMap = root->getParentMap();
+    
+    // for (auto elem: *parentMap) {
+    //     cout << "Node: " << elem.first->data << " " 
+    //         << "Parent: " << elem.second->data << endl;
+    // }
 
-    // BSTNode* node = root->getParentNode(3);
-    // node? cout << node->data << endl : cout << "parent is NULL" << endl;
-
+    root = root->deleteNode(9);
+    root->print("in");
+    //root->print("pre");
+    
     return 0;
 }
