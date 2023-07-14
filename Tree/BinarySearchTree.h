@@ -1,3 +1,6 @@
+#ifndef BINARYSEARCHTREE_H
+#define BINARYSEARCHTREE_H
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -504,19 +507,4 @@ public:
 
 };
 
-
-int main() {
-    vector<int> elemArray {6,3,1,-3,2,5,4,9,7,11,12};
-    BSTNode* root = BSTNode::buildBST(elemArray);
-
-    root->print("in");
-    root->print("pre");
-
-    vector<int>* vec = root->levelOrder();
-    for (int i: *vec) {
-        cout << i << " ";
-    }
-    cout << endl;
-    
-    return 0;
-}
+#endif
