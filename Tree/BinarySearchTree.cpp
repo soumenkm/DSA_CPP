@@ -3,6 +3,7 @@
 #include <string>
 #include <stack>
 #include <map>
+#include <queue>
 
 using std::cout;
 using std::endl;
@@ -469,6 +470,38 @@ public:
         }
     } 
 
+    vector<int>* levelOrder() {
+        BSTNode* root = this;
+        std::queue<BSTNode*> nodeQ {};
+        nodeQ.push(root); // original root is pushed only one time
+        vector<int> levelOrder {};
+        
+        // iterate through the queue until it is empty (front/root is null)
+        while (root != nullptr) {
+            // push root's childrens   
+            if (root->left != nullptr) {
+                nodeQ.push(root->left);
+            }
+            if (root->right != nullptr) {
+                nodeQ.push(root->right);
+            }
+
+            // record the front in vector
+            // cout << nodeQ.front()->data << " " << std::flush;
+            levelOrder.push_back(nodeQ.front()->data); // print the front
+
+            // delete the front node
+            nodeQ.pop(); // dequeue the front element
+            
+            // automatically, after delete the pointer goes to next element
+            root = nodeQ.front(); // update the root
+        }
+        
+        // Create a vector in heap and return
+        vector<int>* resPtr = new vector<int> {levelOrder};
+        return resPtr;
+    }
+
 };
 
 
@@ -479,16 +512,11 @@ int main() {
     root->print("in");
     root->print("pre");
 
-    // std::map<BSTNode*, BSTNode*>* parentMap = root->getParentMap();
-    
-    // for (auto elem: *parentMap) {
-    //     cout << "Node: " << elem.first->data << " " 
-    //         << "Parent: " << elem.second->data << endl;
-    // }
-
-    root = root->deleteNode(9);
-    root->print("in");
-    //root->print("pre");
+    vector<int>* vec = root->levelOrder();
+    for (int i: *vec) {
+        cout << i << " ";
+    }
+    cout << endl;
     
     return 0;
 }
