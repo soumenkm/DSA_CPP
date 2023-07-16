@@ -1,3 +1,6 @@
+#ifndef HEAP_H
+#define HEAP_H
+
 #include <iostream>
 #include <cmath>
 
@@ -170,7 +173,7 @@ public:
         }
     }
 
-    void decreaseKey(const int index) {
+    void percolateUp(const int index) {
         // Move up the index to top levels if required 
         if (index == 0) {
             // if the index is already at top level then return
@@ -183,7 +186,7 @@ public:
                 return;
             } else {
                 this->swap(parentIndex, index);
-                decreaseKey(parentIndex);
+                percolateUp(parentIndex);
             }
         }
     }
@@ -203,7 +206,7 @@ public:
 
         // Adjust the values till the top level
         int childIndex = this->length - 1;
-        decreaseKey(childIndex);
+        this->percolateUp(childIndex);
     }
 
     void buildHeapByRepeatedInsertion(const int* const arr, const int size) {
@@ -285,20 +288,48 @@ public:
         // return the sorted array
         return sortedArr;
     }
+
+    int searchKey(const int key) {
+        int index {-1};
+        for (int i = 0; i < this->length; i++) {
+            if (this->dataArr[i] == key) {
+                index = i;
+                break;
+            }
+        }
+        return index;
+    }
+
+    void decreaseKey(const int oldKey, const int newKey) {
+        if (newKey >= oldKey) {
+            return;
+        } else {
+            // We provide the key value and not the index so search for key
+            int index = this->searchKey(oldKey);
+            
+            // Replace the old key by new key
+            this->dataArr[index] = newKey;
+
+            // Adjust the keys till top level (percolate up)
+            this->percolateUp(index);
+        }
+    }
+
+    void increaseKey(const int oldKey, const int newKey) {
+        if (newKey <= oldKey) {
+            return;
+        } else {
+            // We provide the key value and not the index so search for key
+            int index = this->searchKey(oldKey);
+            
+            // Replace the old key by new key
+            this->dataArr[index] = newKey;
+            
+            // Adjust the keys till bottom level (heapify)
+            this->heapify(index);
+        }
+    }
+
 };
 
-int main() {
-    MinHeap* minHeap = new MinHeap {};
-    int arr[] = {5,10,1,20,6,17,15,2,4,3}; int size = sizeof(arr)/sizeof(int);
-    
-    minHeap->buildHeap(arr, size);
-    minHeap->printHeap();
-
-    int* s = minHeap->heapSort();
-    MinHeap::printArray(s,size);
-    delete [] s;
-
-    delete minHeap; // deallocate the object
-
-    return 0;
-}
+#endif
