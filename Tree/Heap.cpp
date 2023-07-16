@@ -23,12 +23,34 @@ public:
     ~MinHeap() {
         delete [] this->dataArr;
     }
+
+    bool isEmpty() {
+        if (this->length == 0) {
+            return true;
+        } else if (this->length > 0 && this->length <= this->maxSize) {
+            return false;
+        } else {
+            throw std::runtime_error("Heap size out of range!");
+        }
+    }
+
+    bool isFull() {
+        if (this->length >= 0 && this->length == this->maxSize) {
+            return true;
+        } else if (this->length >= 0 && this->length < this->maxSize) {
+            return false;
+        } else {
+            throw std::runtime_error("Heap size out of range!");
+        }
+    }
+
     void assignHeap(const int* const arr, int size) {
         for (int i = 0; i < size; i++) {
             this->dataArr[i] = arr[i];
         }
         this->length = size;
     }
+
     void printHeap() {
         for (int i = 0; i < this->length; i++) {
             cout << this->dataArr[i] << " ";
@@ -36,21 +58,32 @@ public:
         cout << "END" << endl;
     }
 
+    static void printArray(const int* const arr, const int size) {
+        for (int i = 0; i < size; i++) {
+            cout << arr[i] << " ";
+        }
+        cout << "END" << endl;
+    }
+
     int getLeftChild(const int index) {
         return 2*index+1;
     }
+    
     int getRightChild(const int index) {
         return 2*index+2;
     }
+    
     int getParent(const int index) {
         int parentIndex = std::ceil(index/2.0) - 1;
         return parentIndex;
     }
+    
     void swap(const int idxa, const int idxb) {
         int temp = this->dataArr[idxa];
         this->dataArr[idxa] = this->dataArr[idxb];
         this->dataArr[idxb] = temp;
     }
+    
     static int getMinOfArray(const int* const arr, const int size) {
         int min = arr[0];
         for (int i = 1; i < size; i++) {
@@ -59,6 +92,21 @@ public:
             }
         }
         return min;
+    }
+
+    static int getKthMinOfArray(const int* const arr, const int size, const int k) {
+        // k = 1 means 1st min, k = 2 means 2nd min and so on ...
+        // Create a copy of the input array
+        int* tempArr = new int[size];
+        std::copy(arr, arr + size, tempArr);
+
+        // Sort the array in ascending order
+        std::sort(tempArr, tempArr + size);
+
+        // Return the kth smallest element
+        int kthMin = tempArr[k - 1];
+        delete[] tempArr;
+        return kthMin;
     }
 
     void heapify(const int rootIndex) {
@@ -163,22 +211,94 @@ public:
             this->insertNode(arr[i]);
         }
     }
+
+    int deleteMin() {
+        // Replace the root with the last element
+        int min = this->dataArr[0]; // store it for return
+        this->swap(0, this->length - 1);
+
+        // Delete the last node
+        this->dataArr[this->length - 1] = -1; // reset to -1
+        (this->length)--;
+
+        // Heapify the tree now
+        this->heapify(0);
+
+        // Return the deleted element
+        return min;
+    }
+
+    int findMin() {
+        if (!(this->isEmpty())) {
+            return this->dataArr[0];
+        } else {
+            return -1;
+        }
+    }
+
+    int findMax() {
+        // Max is present at leaf nodes
+        int numLeafs = std::ceil(this->length/2.0);    
+        int max = this->dataArr[this->length - 1];
+        for (int i = 1; i < numLeafs; i++) {
+            int current = this->dataArr[this->length - 1 - i];
+            if (current > max) {
+                max = current;
+            }
+        }
+        return max;
+    }
+
+    int findKthMin(const int k) {
+        // Kth min is present at most k-1 th level where level 0 is root
+        // k = 1 means 1st minimum, k = 2 means 2nd minimum and so on ...
+        int kthMin {-1};
+        if (k > 0 && k <= this->length) {
+            int numScan = static_cast<int>(std::pow(2, k)) - 1;
+            int numElem = numScan > this->length ? this->length : numScan;
+            kthMin = MinHeap::getKthMinOfArray(this->dataArr, numElem, k);
+        } else {
+            throw std::runtime_error("Invalid input k!");
+        }
+        return kthMin;
+    }
+
+    int* heapSort() {
+        // Store the length and original heap
+        int length = this->length;
+        int* tempArr = new int[length] {};
+        std::copy(this->dataArr, this->dataArr + length, tempArr);
+
+        // delete the nodes from heap in place
+        while (!(this->isEmpty())) {
+            this->dataArr[this->length] = this->deleteMin(); // sort in place
+        }
+
+        // store it in another array
+        int* sortedArr = new int[length] {};
+        std::copy(this->dataArr, this->dataArr + length, sortedArr);
+
+        // reset the heap to original
+        std::copy(tempArr, tempArr + length, this->dataArr);
+        delete [] tempArr;
+
+        // return the sorted array
+        return sortedArr;
+    }
 };
 
 int main() {
     MinHeap* minHeap = new MinHeap {};
-    MinHeap* minHeap2 = new MinHeap {};
-
     int arr[] = {5,10,1,20,6,17,15,2,4,3}; int size = sizeof(arr)/sizeof(int);
     
     minHeap->buildHeap(arr, size);
     minHeap->printHeap();
 
-    minHeap2->buildHeapByRepeatedInsertion(arr, size);
-    minHeap2->printHeap();
+    int* s = minHeap->heapSort();
+    MinHeap::printArray(s,size);
+    delete [] s;
 
     delete minHeap; // deallocate the object
-    delete minHeap2;
 
     return 0;
 }
