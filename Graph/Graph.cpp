@@ -3,12 +3,14 @@
 #include <fstream>
 #include <vector>
 #include <tuple>
+#include <stack>
 
 using std::cout;
 using std::cin;
 using std::endl;
 using std::vector;
 using std::tuple;
+using std::stack;
 
 class Node {
 public:
@@ -372,6 +374,34 @@ public:
         }
     }  
 
+    vector<int> dfsByStack(const int startIndex) {
+        // Works only for strongly connected graph
+        stack<int> vertexStack {};
+        vector<bool> visitedArray (this->vertexSize, false);
+        vector<int> dfsArray (this->vertexSize, -1);
+        
+        int index = startIndex;
+        int i = 0;
+        vertexStack.push(index);
+        visitedArray[index] = true;
+        
+        while (!(vertexStack.empty())) {       
+            index = vertexStack.top();
+            dfsArray[i++] = index;
+            vertexStack.pop();
+
+            Node* head = this->vertexArray[index];
+            while (head != nullptr) {
+                if (!(visitedArray[head->data])) {
+                    vertexStack.push(head->data);
+                    visitedArray[head->data] = true;
+                }
+                head = head->next;
+            }
+        }   
+        return dfsArray;
+    }
+
 };
 
 
@@ -382,14 +412,12 @@ int main() {
     GraphList* graphList = new GraphList {matrix};
     graphList->printGraph();
 
-    vector<int*> res = graphList->getTraverseTime(0);
+    vector<int> res = graphList->dfsByStack(0);
 
-    for (int i = 0; i < graphList->vertexSize; i++) {
-        cout << "Vertex: " << i << " Start: " << res[0][i] << " Finish: " << res[1][i] << endl;
+    for (int data: res) {
+        cout << data << " ";
     }
-
-    delete [] res[0];
-    delete [] res[1];
+    cout << endl;
 
     delete graphList;
     delete matrix;
