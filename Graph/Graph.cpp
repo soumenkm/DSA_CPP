@@ -11,6 +11,7 @@ using std::endl;
 using std::vector;
 using std::tuple;
 using std::stack;
+using std::string;
 
 class Node {
 public:
@@ -402,22 +403,87 @@ public:
         return dfsArray;
     }
 
+    vector<vector<string>> classifyEdges(const int index, int n = 0) {
+        // works only for strongly connected graphs
+        static int* colorArray = new int [this->vertexSize] {};
+        static int* startArray = new int [this->vertexSize] {};
+        static int** dft = new int* [this->vertexSize] {};
+        // without using dft, we could have used stack or start time difference of 1
+        // to remember the parent of a node
+        static int i {0};
+        static int time {0};
+        i++;
+        if (i == 1) {
+            for (int j = 0; j < this->vertexSize; j++) {
+                dft[j] = new int [this->vertexSize] {};
+            }
+        }
+        static vector<string> treeEdge {};
+        static vector<string> backEdge {};
+        static vector<string> crossEdge {};
+        static vector<string> forwardEdge {};
+
+        // set the vertex as visited but not backtracked
+        colorArray[index] = 1;
+        startArray[index] = time++;
+
+        if (this->vertexArray[index] == nullptr) {
+            cout << index << " " << std::flush;
+        } else {
+            Node* head = this->vertexArray[index];
+            cout << index << " " << std::flush;
+            while (head != nullptr) {
+                if (colorArray[head->data] == 0) {
+                    dft[index][head->data] = 1; // a tree edge now
+                    string te = std::to_string(index) + string(" --> ") + std::to_string(head->data);
+                    treeEdge.push_back(te);
+                    this->classifyEdges(head->data, 1);
+                }
+                if (dft[index][head->data] == 0 && colorArray[head->data] == 1) {
+                    string be = std::to_string(index) + string(" --> ") + std::to_string(head->data);
+                    backEdge.push_back(be);
+                }
+                if (dft[index][head->data] == 0 && colorArray[head->data] == 2 && startArray[index] > startArray[head->data]) {
+                    string ce = std::to_string(index) + string(" --> ") + std::to_string(head->data);
+                    crossEdge.push_back(ce);
+                }
+                if (dft[index][head->data] == 0 && colorArray[head->data] == 2 && startArray[index] < startArray[head->data]) {
+                    string fe = std::to_string(index) + string(" --> ") + std::to_string(head->data);
+                    forwardEdge.push_back(fe);
+                }
+                head = head->next;
+            }
+        }
+
+        // set the vertex as visited and backtracked
+        colorArray[index] = 2;
+
+        if (n == 0) {
+            cout << endl;
+            return vector<vector<string>> {treeEdge, backEdge, crossEdge, forwardEdge};
+        } else {
+            return vector<vector<string>> {};
+        }
+    }
+
 };
 
 
 int main() {
     Matrix* matrix = new Matrix {"matrixFile.txt"};
-    matrix->printMatrix();
+    //matrix->printMatrix();
 
     GraphList* graphList = new GraphList {matrix};
-    graphList->printGraph();
+    //graphList->printGraph();
 
-    vector<int> res = graphList->dfsByStack(0);
+    vector<vector<string>> res = graphList->classifyEdges(0);
 
-    for (int data: res) {
-        cout << data << " ";
-    }
-    cout << endl;
+    for (auto i: res) {
+        for (auto j: i) {
+            cout << j << ", ";
+        }
+        cout << endl;
+    }    
 
     delete graphList;
     delete matrix;
